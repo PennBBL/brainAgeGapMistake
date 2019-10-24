@@ -1,7 +1,7 @@
 ### This script runs equation to compare to simulation results
 ###
 ### Ellyn Butler
-### October 11, 2019 - October 22, 2019
+### October 11, 2019 - October 24, 2019
 
 set.seed(20)
 
@@ -201,3 +201,14 @@ for (i in 1:nrow(multivariate_table)) {
   multivariate_table[i, "fakecorrtrans"] <- cor(df_test$Age, df_test$BAGRegressAgePlusAge)
   multivariate_table[i, "fakecorrfunc"] <- fakecorr(df_test$Age, df_test[,grep("Brain", colnames(df_test))], mod_regressAgeOutOfDeltas$coefficients[[2]], mod_predictAge)
 }
+
+colnames(multivariate_table) <- c("# Brain", "Sample Corr", "Corr(Age, Braini)", "Corr(Braini, Brainj)", "Var(Age)", "Var(f(B))", "Cov(Age, f(B))", "True Corr", "Fake Corr Trans", "Fake Corr Func")
+
+multivariate_table[, "Var(Age)"] <- round(multivariate_table[, "Var(Age)"], digits=3)
+multivariate_table[, "Var(f(B))"] <- round(multivariate_table[, "Var(f(B))"], digits=3)
+multivariate_table[, "Cov(Age, f(B))"] <- round(multivariate_table[, "Cov(Age, f(B))"], digits=3)
+multivariate_table[, "True Corr"] <- round(multivariate_table[, "True Corr"], digits=3)
+multivariate_table[, "Fake Corr Trans"] <- round(multivariate_table[, "Fake Corr Trans"], digits=3)
+multivariate_table[, "Fake Corr Func"] <- round(multivariate_table[, "Fake Corr Func"], digits=3)
+
+write.csv(multivariate_table, "/Users/butellyn/Documents/BAG/data/multivariate_table.csv", row.names=FALSE)
