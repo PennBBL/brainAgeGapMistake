@@ -1,0 +1,168 @@
+\documentclass[40pt]{article}
+
+\usepackage{answers}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{multicol}
+\usepackage{mathrsfs}
+\usepackage[margin=.7in]{geometry} 
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{wrapfig}
+\usepackage{xcolor}
+ 
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\R}{\mathbb{R}}
+
+\DeclareMathOperator{\sech}{sech}
+\DeclareMathOperator{\csch}{csch}
+ 
+\newenvironment{theorem}[2][Theorem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{definition}[2][Definition]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{proposition}[2][Proposition]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{lemma}[2][Lemma]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{exercise}[2][Exercise]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{solution}[2][Solution]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+\newenvironment{problem}[2][Problem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{question}[2][Question]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{corollary}[2][Corollary]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+ 
+\begin{document}
+ 
+% --------------------------------------------------------------
+%                         Start here
+% --------------------------------------------------------------
+ 
+\title{Tom's Notes}%replace with the appropriate homework number
+\author{Ellyn Butler} %if necessary, replace with your course title
+ 
+\maketitle
+%Below is an example of the problem environment
+
+\underline{Notation}
+
+$A = \text{Age}$\\
+
+$X$ is the matrix of brain features from the training sample. \\
+
+$\hat{A} =$ ML-predicted age \\
+
+$B = A - \hat{A} = \text{BAG}$ \\
+
+$H_A = A (A^TA)^{-1}A^T$ \\
+
+$H_X = X (X^TX)^{-1}X^T$ \\
+
+$M =$ MBAG $= B -  \hat{\alpha} - \hat{\gamma} A = B - H_A B = A - \hat{A} - H_AA + H_A \hat{A} = -\hat{A} + H_A \hat{A}$ \\
+
+$= -R_A \hat{A}$ \textcolor{red}{, where $R_A=I-H_A$.} \\
+
+$\hat{A}^M = A - M$ = Modified predicted age \\
+
+$r_{\hat{A}A}^2 = \frac{V(H_A \hat{A})}{V(\hat{A})} = \frac{V(H_{\hat{A}} A)}{V(A)} = 1 - \frac{V(R_A \hat{A})}{V(\hat{A})} = 1 - \frac{V(R_{\hat{A}} A)}{V(A)}$ \\ %\textcolor{red}{The variance X explains in Y is equal to the variance that Y explains in X.} \textcolor{red}{$\frac{reg SS}{Tot SS} = 1 - \frac{resid SS}{Tot SS}$} \\
+
+Importantly, we emphasize that the following derivation involves the algebraic manipulation of the sample estimates and not expectations. For example, ${\textrm{Corr}}(A, \hat{A}^M) = \frac{\textrm{Cov}(A, \hat{A}^M)}{\sqrt{V(A)V(\hat{A}^M)}} = \frac{A^T\hat{A}^M/N} {\sqrt{\{A^TA/N-(1^TA/N)^2\}\cdot [(\hat{A}^M)^T\hat{A}^M/N-\{1^T\hat{A}^M/N\}^2]}}$.
+\\
+
+\underline{Goal}
+
+Our goal is to compute ${\textrm{Corr}}(A, \hat{A}^M)$ in terms of $r_{\hat{A}A}^2$. \\
+
+\underline{Derivation}
+
+We first note that Cov$(A, \hat{A}^M) = \text{Cov}(A, A-M) = V(A) + \text{Cov}(A, R_A \hat{A}) = V(A)$. \\
+
+Then, consider:
+\begin{align*}
+V(\hat{A}^M) &= V(A - M) \\
+&= V(A + R_A \hat{A}) \\
+&= V(\hat{A}) \left\{\frac{V(A)}{V(\hat{A})} + \frac{V(R_A \hat{A})}{V(\hat{A})}\right\} \\
+&= V(\hat{A}) \left\{\frac{V(A)}{V(\hat{A})} + (1 - r_{\hat{A}A}^2) \right\} \\
+\end{align*}
+%\textcolor{red}{I don't understand the last two steps above.} \\
+
+%\textcolor{red}{Andrew: The $V(A + R_A \hat{A}) = V(\hat{A}) [\frac{V(A)}{V(\hat{A})} + \frac{V(R_A \hat{A})}{V(\hat{A})}]$ equality comes from $V(A + R_A \hat{A}) = V(A) + V(R_A \hat{A}) + 2\text{Cov}(A, -M)$ where the latter term is zero, then he just multiplied by $V(\hat{A})$ on the numerator and denominator} \\
+
+%\textcolor{red}{Andrew: The last step uses the fact that $R_{\hat{A}A}^2 = 1 - \frac{V(R_A \hat{A})}{V(\hat{A})}$ as derived earlier} \\
+
+So then, 
+\begin{align*}
+\textrm{Corr}(A, \hat{A}^M) &= \frac{V(A)}{\sqrt{V(A)V(\hat{A}^M)}}  \\
+&= \frac{V(A)}{\sqrt{V(A)V(\hat{A}) \frac{V(A)}{V(\hat{A})} + (1 - r_{\hat{A}A}^2)\Big]}} \\
+&=  \left[\frac{V(\hat{A})}{V(A)} \left\{\frac{V(A)}{V(\hat{A})} + (1 - r_{\hat{A}A}^2) \right\} \right]^{-\frac{1}{2}} \\
+&= \left\{1 + \frac{V(\hat{A})}{V(A)}(1 - r_{\hat{A}A}^2) \right\}^{-\frac{1}{2}} \\
+\end{align*}
+
+And the first equality holds. If $\hat{A}$ corresponds to a regression of A on features, then $\frac{V(\hat{A})}{V(A)}$ is the $R^2$ of that regression. \\
+
+
+%What to do with $\frac{V(\hat{A})}{V(A)}$! Consider, \\
+
+%$R_B^2 = 1 - \frac{V(B)}{V(A)} = 1 - \frac{V(A - \hat{A})}{V(A)}= \frac{V(A) - V(A) - V(\hat{A}) + 2 \text{Cov}(A, \hat{A})}{V(A)} = -\frac{V(\hat{A})}{V(A)} + 2 \frac{\text{Cov}(A, \hat{A})}{V(A)}$ \\ \\
+%So re-arranging, we get \\
+%$\frac{V(\hat{A})}{V(A)} = R_B^2 + 2 \frac{\text{Cov}(A, \hat{A})}{V(A)} = R_B^2 + 2 \frac{V(A) + V(\hat{A}) + 2 \text{Cov}(A, \hat{A})}{V(A)} = ? = R_B^2 + 2 \sqrt{\frac{V(\hat{A})}{V(A)}} r_{A\hat{A}}$ \\ \textcolor{red}{Shouldn't there be a negative sign in front of $R_B^2$?} \\
+
+Next, note that if $\hat{A}$ is a linear estimator with an intercept, then $\frac{V(\hat{A})}{V(A)} = R_{\hat{A}A}^2$. Specifically, if there exists an idempotent $H_X$ ($H_XH_X=I, H_X'=H_X$) s.t. $\pmb{1}'H_X = \pmb{1}$, and $\hat{A} = H_XA$, then \\
+
+\begin{align*}
+    \frac{V(\hat{A})}{V(A)} &= \frac{V(H_XA)}{V(A)} \\
+    &= \frac{(H_XA)^T/N - (1^TH_XA/N)^2}{V(A)} \\
+    &= \frac{A^TH_XA/N - (1^TA/N)(1^TH_XA/N)}{V(A)} \\
+    &= \frac{\text{Cov}(A, H_XA)}{V(A)} \\
+    &= \frac{\text{Cov}(A,\hat{A})}{V(A)} \\
+    &= \sqrt{\frac{V(\hat{A})}{V(A)}} r_{\hat{A}A}
+\end{align*}
+    
+And thus
+\begin{align*}
+     \frac{V(\hat{A})}{V(A)} 
+    = r_{\hat{A}A}^2
+\end{align*}
+
+%\textcolor{red}{The result in terms of sample variances and covariances that $V(H_X A) = \text{Cov}(A, H_X A)$ is a little hard to follow, since normally we would write the sample covariance of $A$ and $H_X A$ as $\text{Cov}(A, H_X A) = \frac{A'(H_X A) - (\mathbf{1}'A)'(\mathbf{1}'H_X A)/N}{N-1}$ which is slightly different from the expression in the notes.} \\
+
+%\textcolor{red}{Confused by the equality $\sqrt{\frac{V(\hat{A})}{V(A)}} = r_{\hat{A}A}$ since $r_{\hat{A}A}$ is defined earlier as $\sqrt{\frac{V(H_A \hat{A})}{V(\hat{A})}}$. It seems like $r^2_{\hat{A}A}$ is both the $r^2$ from regression of $\hat{A}$ on $A$ and the $r^2$ from regression of $A$ on features since the latter is $\sqrt{\frac{V(\hat{A})}{V(A)}} = \sqrt{\frac{V(H_X A)}{V(A)}}$. Define $r^2_{AX} = \frac{V(H_XA)}{V(A)}$ as the $r^2$ from regression of $A$ on features. The result here seems to prove that $r^2_{AX}$ = $r^2_{\hat{A}A}$.} \\
+
+%\textcolor{red}{This derivation seems to rely in part of the derivation of $\frac{V(\hat{A})}{V(A)}}$ in terms of $r_{\hat{A}A}^2$ and $R^2_B$. Namely that $\frac{\text{Cov}(A, \hat{A})}{V(A)} = \sqrt{\frac{V(\hat{A})}{V(A)}} r_{A\hat{A}}$, but we did not find this derivation in the notes.} \\
+
+%\textcolor{red}{Overall, having difficulty getting to the result through these derivations although it seems to be well-known and checking numerically it seems to work out. Actually, I found this result in this linear models textbook: }
+%\textcolor{red}{\url{http://www.utstat.toronto.edu/\textasciitilde brunner/books/LinearModelsInStatistics.pdf} on page 162 where $r_{\hat{A}{A}}$ is the simple correlation between predicted and actual age.}\\
+
+
+
+\hrulefill \\
+
+It can be shown that for any $\hat{A}$ if $r_{\hat{A},A}$ is the sample correlation with age, then the correlation of the modified predicted age, $\hat{A}^M$, with age is
+
+$$
+\text{Corr}(A,\hat{A}^M)= \left(1 + \frac{\text{Var}(\hat{A})}{\text{Var}(A)}(1-r_{\hat{A},A}^2)\right)^{-1/2},
+$$
+
+
+\noindent where $r_{\hat{A},A}^2= 0$ and $\frac{\text{Var}(\hat{A})}{\text{Var}(A)} = 1$. Figure X plots this correlation for different variance ratios; as shrinkage is expected we expect $\text{Var}(\hat{A})/\text{Var}(A) < 1$, but even for the most optimistic case modified predicted age can never have a correlation with age less than 0.7071. 
+
+%\textcolor{red}{I am not sure why the assumption is that $r_{\hat{A},A}^2= 0$ and $\frac{\text{Var}(\hat{A})}{\text{Var}(A)} = 1$ is as bad as it can get. In theory, you could have predictions that were more variable than the actual values. Why draw the line at equal variances?}
+
+For the special case when $\hat{A}$ is a linear predictor, i.e. is based on a regression of $A$ on the brain features, the result simplifies to
+$$
+\text{Corr}(A,\hat{A}^M)= \left(1 + r_{\hat{A},A}^2(1-r_{\hat{A},A}^2)\right)^{-1/2},
+$$
+as shown in Figure XXX. In this case the correlation between $\hat{A}^M$ and $A$ can never be less than 0.9177.
+
+\dots
+These results are not in expectation, but rather algebraic transformations that dictate the sample correlation of $A$ and $\hat{A}^M$ given observed values of $r_{\hat{A},A}$ and $\frac{\text{Var}(\hat{A})}{\text{Var}(A)}$.
+
+
+
+\end{document}

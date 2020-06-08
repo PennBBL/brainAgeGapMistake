@@ -1,0 +1,427 @@
+---
+title: "Further Statistical Details on Smith et al. (2019)"
+output:
+  html_notebook:
+    theme: united
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+  html_document:
+    df_print: paged
+    toc: yes
+---
+
+## Review of Smith et al. (2019)
+
+We set up improved notation that follows Smith et al. (2019) while being more conscientious about distinguishing between population parameters and estimates.
+
+### Basic Notation
+
+Let $Y_i$ be the chronological age of the $i$th subject, for $i=1,...,N$ subjects, and  $Y=(Y_1,Y_2,...,Y_N)^\top$.
+
+Let $X_i$ be the $D$-vector of image data for subject $i$; as a matrix, we write all $N$ subjects' brain data as the $N\times D$ matrix $X$.
+
+We are trying to derive an estimate of age based solely on brain data,
+$$\hat{Y}_B = f(X_i).$$
+The fundamental quantity interest is the residuals, or the Brain Age Gap (GAP), the difference between chronological age and the brain age estimate:
+$$\delta_i = f(X_i) - Y_i.$$
+Note this is the the negation of the usual definition of residual as "data $-$ estimate".
+
+### Estimate 1: Residualising w.r.t. $X$
+
+Using a linear model, we assume
+$$Y_i = X_i\beta_1 + \epsilon_{1i}$$
+for all $i$, which gives a brain age estimate vector of 
+$$\hat{Y}_{B1} = X\hat\beta_1$$
+and GAP estimate
+$$\hat{\delta}_1 = X\hat\beta_1-Y,$$
+the sign flipped residuals $-\hat\epsilon_1=Y-X\hat\beta_1$.
+Assuming $N\gg D$, we can reasonably estimate $\beta$ as
+$$\hat\beta_1=(X^\top X)^{-1}X^\top Y.$$
+
+This gives brain age estimate
+$$\hat{Y}_{B1}=H_XY$$
+where $H_X=X(X^\top X)^{-1}X^\top$ is the hat matrix (that projects into the space of $X$) and GAP estimate
+\begin{eqnarray}
+\hat{\delta}_1 &=& (H_X-I)Y\\
+     &=&-R_X Y,
+\end{eqnarray}
+where $R_X=I-H_X$ is the residual forming matrix.
+
+Two well-known characteristics of linear model residuals are that they are *orthogonal* to the prediction
+$$\hat\delta_1^\top\hat{Y}_{B1}=0$$
+but *linearly dependent* with the data, with correlaiton
+\begin{eqnarray}
+\mathsf{Corr}(\hat\delta_1,Y)&=&\frac{\hat{\delta}_1^\top Y}{\sqrt{\hat\delta_1^\top \hat\delta_1}\sqrt{Y^\top Y}}\\
+&=&\frac{Y^\top R_X^\top Y}{\sqrt{\hat\delta_1^\top \hat\delta_1}\sqrt{Y^\top Y}}\\
+&=&-\frac{\hat\delta_1^\top \hat\delta_1}{\sqrt{\hat\delta_1^\top \hat\delta_1}\sqrt{Y^\top Y}}\\
+&=&-\sqrt{\frac{\hat\delta_1^\top \hat\delta_1}{Y^\top Y}}\\
+&=&-\sqrt{1-R^2} \leq 0,
+\end{eqnarray}
+where we've used the fact that $R_X$ is idempotent, and thus $\hat\delta_1^\top Y=-\hat\delta_1^\top\hat\delta_1$, and have denoted the r-squared for $Y$ on $X$ as $R^2=1-\hat\delta_1^\top\hat\delta_1/Y^\top Y$.  
+
+This shows that the correlation of $\hat\delta_1$ and $Y$ is  negative, and as noted in Smith et al. (2019), if $X$ possesses absolutely no information about chronological age, then $\hat\beta_1\approx 0$ and then GAP estimate $\hat{\delta}_1 = -Y$, a particularly poor estimate.
+
+The normalised mean squared error of this OLS estimate is one-minus-r-squared:
+\begin{eqnarray}
+\mathrm{MSE}_1&=&\frac{(Y-\hat{Y}_{B1})^\top(Y-\hat{Y}_{B1})}{Y^\top Y}\\
+&=&\frac{\hat\delta_1^\top \hat\delta_1}{Y^\top Y}\\
+&=&1-R^2.
+\end{eqnarray}
+While raw-units MSE is used in real data analyses, for our comparisons we find it more useful to work with this total-sum-of-squares normalised version, if for no other reason than the useful link to r-squared.
+
+For completeness, we work out the correlation of $\hat{Y}_{B1}$ and age $Y$:
+\begin{eqnarray}
+\mathrm{Corr}(\hat{Y}_{B1},Y)&=&
+   \frac{\hat{Y}_{B1}^\top Y          }{\sqrt{\hat{Y}_{B1}^\top\hat{Y}_{B1}}\sqrt{Y^\top Y}}\\
+&=&\frac{\hat{Y}_{B1}^\top\hat{Y}_{B1}}{\sqrt{\hat{Y}_{B1}^\top\hat{Y}_{B1}}\sqrt{Y^\top Y}}\\
+&=&\frac{\sqrt{
+         \hat{Y}_{B1}^\top\hat{Y}_{B1}}}{\sqrt{Y^\top Y}}\\
+&=&\sqrt{R^2}.
+\end{eqnarray}
+
+
+### Estimate 2: OLS plus Residualising w.r.t. $Y$
+
+To eliminate the negative correlation with $Y$, consider regressing $\hat\delta_1$ on $Y$, i.e. posing the linear model
+$$\hat\delta_1 = Y\beta_{2} + \delta_2,$$
+where we are to see $-Y_i\beta_2$ as the correction factor to add to $\hat\delta_{1i}$ to get the improved $\delta_2$ GAP estimate for subject $i$.
+
+Assuming centering this estimate is
+$$
+\hat\beta_2 = \frac{1}{Y^\top Y}Y^\top \hat\delta_1
+$$
+and gives an estimate of $\delta_2$
+\begin{eqnarray}
+\hat\delta_2 &=& \hat\delta_1 - Y\hat\beta_2\\
+  &=& -R_XY-H_Y\hat\delta_1\\
+  &=& -R_XY+H_Y R_X Y\\
+  &=& -(R_X -H_Y R_X) Y\\
+  &=& -(I -H_Y) R_X  Y\\
+  &=& -R_Y R_X  Y,
+\end{eqnarray}
+where $H_Y$ is the hat matrix for projecting into the space of $Y$, $R_Y$ is the
+corresponding residual-forming matrix; should $Y$ not be centered,
+this expression generalises with $H_Y$ and $R_Y$ based on the design matrix $[1\;Y]$.
+
+This can also be expressed differently, focusing on 'hat' matricies instead of residual forming matricies:
+\begin{eqnarray}
+\hat\delta_2 &=& -R_Y R_X Y\\
+&=& - R_Y (I - H_X) Y\\
+&=& -R_Y Y + R_Y H_X Y \\
+&=& (I-H_Y)H_X Y\\
+&=& H_X Y - \frac{1}{Y^\top Y} YY^\top H_X Y\\
+&=& \hat{Y}_{B1} -   \frac{1}{Y^\top Y}Y (H_X Y)^\top H_X Y\\
+&=& \hat{Y}_{B1} -   \frac{\hat{Y}_1^\top\hat{Y}_1}{Y^\top Y}Y\\
+&=& \hat{Y}_{B1} - R^2 Y\\
+&=& \hat{Y}_{B1} - Y + Y - R^2Y  \\
+&=& \hat\delta_1 + (1-R^2)Y.
+\end{eqnarray}
+This shows, somehow counterintuitively, that $\hat\delta_2$ is actually shifted by $Y$ in proportion to $1-R^2$, the relative error.
+
+By construction, $\hat\delta_2$ is orthogonal to $Y$
+\begin{eqnarray}
+\hat\delta_2^\top Y &=& -(R_Y R_X Y)^\top Y\\
+  &=&-Y^\top R_X R_Y Y\\
+  &=&0.
+\end{eqnarray}
+
+The corresponding brain age estimate is 
+\begin{eqnarray}
+\hat{Y}_{B2}&=&Y +\hat\delta_2\\
+&=&Y+\hat{Y}_{B1} - R^2 Y\\
+&=&\hat{Y}_{B1}+(1-R^2)Y,
+\end{eqnarray}
+which shows that, when $R^2$ is very small, the "brain age" estimate is going to be largely driven by "age" itself.
+
+The normalised MSE is
+\begin{eqnarray}
+\mathrm{MSE}_2&=&\frac{(Y-\hat{Y}_{B2})^\top(Y-\hat{Y}_{B2})}{Y^\top Y}\\
+&=&\frac{\hat\delta_2^\top \hat\delta_2}{Y^\top Y}\\
+&=&\frac{1}{Y^\top Y}(\hat\delta_1 + (1-R^2)Y)^\top(\hat\delta_1 + (1-R^2)Y)\\
+&=&\frac{1}{Y^\top Y}\left(\hat\delta_1^\top\hat\delta_1 +2(1-R^2)\hat\delta_1^\top Y + (1-R^2)^2Y^\top Y\right)\\
+&=&\frac{\hat\delta_1^\top\hat\delta_1}{Y^\top Y} -2(1-R^2)\frac{\hat\delta_1^\top\hat\delta_1}{Y^\top Y} + (1-R^2)^2\\
+&=&(1-R^2) -2(1-R^2)^2 + (1-R^2)^2\\
+&=&(1-R^2) -(1-R^2)^2\\
+&=&1-R^2 -1+2R^2-R^4\\
+&=&R^2-R^4\\
+&=&R^2(1-R^2)\\
+&=&\mathrm{MSE}_1 R^2 < \mathrm{MSE}_1
+\end{eqnarray}
+which shows that $\mathrm{MSE}_2$ is always smaller than $\mathrm{MSE}_1$, and converges to zero as $R^2$ goes to 1 (as MSE always would do) or 0, a potentially strange behaviour.
+
+
+Several observations on this GAP estimate $\hat\delta_2= R_Y R_X  Y$:
+
+* It acheives the goal of orthgonality with $Y$, as $Y^\top\hat\delta_2= Y^\top R_Y R_X  Y=0$.
+* The $\mathrm{MSE}_2$ is always smaller than $\mathrm{MSE}_1$, i.e. $\hat{Y}_{B2}$ is closer to $Y$ than $\hat{Y}_{B1}$.
+* While it is always the case that MSE goes to 0 as $R^2\rightarrow 1$, it is a potentially strange behaviour that $\mathrm{MSE}_2\rightarrow0$ as  $R^2\rightarrow 0$.  That is, as $X$ becomes less and less predictive, the magnitude of the corrected GAP $\hat\delta_2$ estimates to zero.
+* As made clear by $\hat{Y}_{B2}=\hat{Y}_{B1}+(1-R^2)Y$, is that $\hat{Y}_{B2}$ is not the span of $X$ and, as made clear by previous comment, is shrunk to the true age as the model fit worsens.
+
+Finally, we find the correlation between $\hat{Y}_{B2}$ and $Y$, by first working their inner product,
+\begin{eqnarray}
+\hat{Y}_{B2}^\top Y &=& (\hat{Y}_{B1}+(1-R^2)Y)^\top Y \\
+ &=& \hat{Y}_{B1}^\top\hat{Y}_{B1}+(1-R^2)Y^\top Y \\
+ &=& \hat{Y}_{B1}^\top\hat{Y}_{B1}+Y^\top Y - \hat{Y}_{B1}^\top\hat{Y}_{B1}\\
+ &=& Y^\top Y,
+\end{eqnarray}
+and the brain age sums-of-squares
+\begin{eqnarray}
+\hat{Y}_{B2}^\top \hat{Y}_{B2}  &=& \left(\hat{Y}_{B1}+(1-R^2)Y\right)^\top\left(\hat{Y}_{B1}+(1-R^2)Y\right)\\
+&=& \hat{Y}_{B1}^\top \hat{Y}_{B1} + 2(1-R^2)\hat{Y}_{B1}^\top Y + (1-R^2)^2Y^\top Y\\
+&=& \hat{Y}_{B1}^\top \hat{Y}_{B1} + 2(1-R^2)\hat{Y}_{B1}^\top \hat{Y}_{B1} + (1-R^2)^2Y^\top Y\\
+&=& Y^\top Y\left(R^2 + 2(1-R^2)R^2 + (1-R^2)^2\right)\\
+&=& Y^\top Y\left(R^2 + 2R^2 -2R^4 + 1-2R^2+R^4\right)\\
+&=& Y^\top Y\left(1+R^2-R^4\right)\\
+&=& Y^\top Y\left(1+R^2(1-R^2)\right),
+\end{eqnarray}
+so we find
+\begin{eqnarray}
+\mathrm{Corr}(\hat{Y}_{B2}, Y)&=&\frac{\hat{Y}_{B2}^\top Y}{\sqrt{\hat{Y}_{B2}^\top \hat{Y}_{B2}}\sqrt{Y^\top Y}}\\
+&=&\frac{Y^\top Y}{\sqrt{Y^\top Y(1+R^2(1-R^2))}\sqrt{Y^\top Y}}\\
+&=&1/\sqrt{1+R^2(1-R^2)}
+\end{eqnarray}
+
+
+
+### Estimate 4: Correcting OLS without direct use of $Y$
+
+The previous method constitutes a correction for each subject $i$ of  $-Y_i\beta_2$, i.e. requires knowlege of each subject's age in the correction.  Use of the "labels" in a machine learning prediction is considered bad form, and presumably that was the motivation for the following method.  Apparently first used by Cole et al. (2018) doi:10.1038/mp.2017.62, evaluated by Beheshti et al. (2019) doi:10.1016/j.nicl.2019.102063 and used inPeng et al. (2019) doi:10.1101/2019.12.17.879346, this method constitues a 2-parameter correction (instead of, in essence, an N-dimensional correction) to remove the influence of brain age on age.  For the analysis here we assume as before $Y$ is centered, but the results should generalise to when $Y$ isn't centered.
+
+Working with an arbitrary (but centered) brain age  $\hat{Y}_B$, consider the linear regression on true age
+$$\hat{Y}_B = Y\beta_{4} + \epsilon_4.$$
+Neglecting $\epsilon_4$ and solving for $Y$ produces a corrected brain age estimate
+$$\hat{Y}_{B4}= \hat{Y}_B/\hat\beta_{4}$$
+and leading to the GAP estimate
+$$\hat{\delta}_4= \hat{Y}_B/\hat\beta_{4}-Y$$
+(numbered 4 here in deference to Smith et al's (2019) having 3 estimators).
+
+Now, while this method was proposed for an arbitrary $\hat{Y}$, to gain potential insight we evaluate it with the usual OLS estimate $\hat{Y}_B=\hat{Y}_{B1}=X\hat\beta_1=H_X Y$.  
+
+First, note that the regression coefficient is exactly the variance of $\hat{Y}_{B1}$ explained by $Y$, i.e. $R^2$:
+\begin{eqnarray}
+  \hat\beta_4&=&\frac{1}{Y^\top Y}Y^\top ~ \hat{Y}_{B1}\\
+  &=&\frac{(H_XY)^\top H_XY}{Y^\top Y}\\
+  &=&R^2
+\end{eqnarray}
+The brain age prediction with this OLS estimate is
+\begin{eqnarray}
+\hat{Y}_{B4}  &=&\hat{Y}_{B1}/\hat\beta_{4}\\
+  &=&  \frac{1}{R^2} H_X Y 
+\end{eqnarray}
+and the GAP estimate is
+\begin{eqnarray}
+\hat\delta_{4} &=& \hat{Y}_{B1}/\hat\beta_4 - Y\\
+   &=& \frac{1}{R^2}H_X Y - Y;\\
+\end{eqnarray}
+
+Note that this GAP estimate can be written in terms of the previous GAP estimate:
+\begin{eqnarray}
+\hat\delta_{4} &=& \hat{Y}_{B1}/\hat\beta_4 - Y\\
+  &=& \hat{Y}_{B1}/R^2 - Y/R^2 + Y/R^2 - Y\\
+  &=& (\hat{Y}_{B1} - Y)/R^2 + Y/R^2 - Y\\
+  &=& \hat{\delta}_1/R^2 + (1/R^2 -1) Y\\
+  &=& \left(\hat{\delta}_1 + (1-R^2) Y\right)/R^2\\
+  &=& \hat\delta_2/R^2.
+\end{eqnarray}
+
+<!--
+Below we'll find this expansion useful   
+\begin{eqnarray}
+\hat\delta_4   &=& -\left(\frac{1}{1-R^2}H_X +I\right) Y\\
+   &=& -\left(\frac{1}{1-R^2}(I-R_X) +I\right) Y\\
+   &=& -\left(\frac{1}{1-R^2}I-\frac{1}{1-R^2} R_X +I\right) Y\\
+   &=& \frac{1}{1-R^2}R_XY -\left(1+\frac{1}{1-R^2}\right) Y\\
+\end{eqnarray}
+-->
+
+<!--   
+-->
+
+This  GAP estimate  orthogonal to $Y$:
+\begin{eqnarray}
+\hat\delta_4^\top Y &=& \left( \frac{1}{R^2}H_X Y - Y\right)^\top Y\\
+&=&   \frac{1}{R^2}(H_X Y)^\top Y - Y^\top Y\\
+&=&   \frac{Y^\top Y}{\hat{Y}_{B1}^\top\hat{Y}_{B1}}(H_X Y)^\top H_XY - Y^\top Y\\
+&=&   \frac{Y^\top Y}{\hat{Y}_{B1}^\top\hat{Y}_{B1}}\hat{Y}_{B1}^\top\hat{Y}_{B1} - Y^\top Y\\
+&=&   Y^\top Y - Y^\top Y \\
+&=&  0.\\
+\end{eqnarray}
+
+<!--
+and has negative correlation:
+\begin{eqnarray}
+\mathsf{Corr}(\hat\delta_4, Y) &=&\frac{\hat\delta_4^\top Y}{\sqrt{\hat\delta_4^\top\hat\delta_4}\sqrt{Y^\top Y}}\\
+ &=&  -\frac{Y^\top Y}{1-R^2}
+    \left(
+       \left(\frac{1}{1-R^2}R_XY -\left(1+\frac{1}{1-R^2}\right) Y\right)^\top
+       \left(\frac{1}{1-R^2}R_XY -\left(1+\frac{1}{1-R^2}\right) Y\right)\right)^{-1/2}
+       \left( \;Y^\top Y\right)^{-1/2}\\
+ &=&  -\frac{(Y^\top Y)^{1/2}}{1-R^2}
+    \left(
+      \frac{1}{(1-R^2)^2}  Y^\top R_XR_XY 
+    -2\frac{1}{1-R^2}  \left(1+\frac{1}{1-R^2}\right) Y^\top R_X Y
+                      +\left(1+\frac{1}{1-R^2}\right)^2 Y^\top Y
+    \right)^{-1/2}\\
+ &=&  -\frac{(Y^\top Y)^{1/2}}{1-R^2}
+    \left(
+      \frac{1}{(1-R^2)^2}  Y^\top R_XR_XY 
+    -2\frac{1}{1-R^2}  \left(1+\frac{1}{1-R^2}\right) Y^\top R_X R_XY
+                      +\left(1+\frac{1}{1-R^2}\right)^2 Y^\top Y
+    \right)^{-1/2}\\
+ &=&  -\frac{(Y^\top Y)^{1/2}}{1-R^2}
+    \left(
+      \left(\frac{1}{1-R^2}-2 \left(1+\frac{1}{1-R^2}\right) \right) \frac{1}{1-R^2} \hat\delta_1^\top\hat\delta_1
+                      +\left(1+\frac{1}{1-R^2}\right)^2 Y^\top Y
+    \right)^{-1/2}\\
+ &=&  -\frac{(Y^\top Y)^{1/2}}{1-R^2}
+    \left(
+      \left(\frac{1}{1-R^2}-2 \left(1+\frac{1}{1-R^2}\right) \right) Y^\top Y
+                      +\left(1+\frac{1}{1-R^2}\right)^2 Y^\top Y
+    \right)^{-1/2}\\
+ &=&  -\frac{(Y^\top Y)^{1/2}}{1-R^2}
+    \left(
+      \left(\frac{1}{1-R^2}-2 \left(1+\frac{1}{1-R^2}\right) 
+                      +\left(1+\frac{1}{1-R^2}\right)^2\right) Y^\top Y
+    \right)^{-1/2}\\
+ &=&  -\frac{1}{1-R^2}
+    \left(
+      \frac{1}{1-R^2}-2 -2\frac{1}{1-R^2}
+                      +1+2\frac{1}{1-R^2} +\frac{1}{(1-R^2)^2}
+    \right)^{-1/2}\\
+ &=&  -\frac{1}{1-R^2}
+    \left(
+      \frac{1}{1-R^2}  +\frac{1}{(1-R^2)^2} -1
+    \right)^{-1/2}\\
+ &=&  -\frac{1}{1-R^2}
+    \left(
+      \frac{1}{1-R^2}  +\frac{1}{(1-R^2)^2} -\frac{1-R^2}{1-R^2}
+    \right)^{-1/2}\\
+ &=&  -\frac{1}{1-R^2}
+    \left(
+       \frac{1}{(1-R^2)^2}+ \frac{R^2}{1-R^2}
+    \right)^{-1/2}\\
+ &=&  -
+    \left(
+       1+ R^2(1-R^2)
+    \right)^{-1/2}\\
+\end{eqnarray}
+This can be compared to $\mathsf{Corr}(\hat\delta_1,Y)=-\sqrt{1-R^2}$; in particular the ratio of this present estimate to the standard
+\begin{eqnarray}
+\frac{\mathsf{Corr}(\hat\delta_4,Y)}{\mathsf{Corr}(\hat\delta_1,Y)}&=&\frac{-(1+R^2(1-R^2))^{-1/2}}{-\sqrt{1-R^2}}\\
+&=&\left(1+R^2(1-R^2)-R^2-R^4(1-R^2)\right)^{-1/2}\\
+&=&\left(1+(R^2)^3\right)^{-1/2}<1
+\end{eqnarray}
+is strictly less than 1, but for small r-squared it is very close to 1... meaning that unless $R^2$ is large the negative correlation of $\hat\delta_4$ with $Y$ will be essentially the same as with $\hat\delta_1$.
+-->
+
+<!--
+ &=& (Y^\top Y)^{-0.5}\frac{-\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1} Y^\top H_X Y -Y^\top Y}{
+        \sqrt{\frac{(Y^\top Y)^2}{(\hat\delta_1^\top\hat\delta_1)^2} (H_XY)^\top H_X Y +2\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1} (H_X Y)^\top Y  + Y^\top Y}}\\
+ &=& (Y^\top Y)^{-0.5}\frac{-\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1} Y^\top (I-R_X) Y -Y^\top Y}{
+         \sqrt{\frac{(Y^\top Y)^2}{(\hat\delta_1^\top\hat\delta_1)^2} ***\hat\delta_1^\top\hat\delta_1**** -2\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1} \hat\delta_1^\top\hat\delta_1  + Y^\top Y}}\\
+ &=& (Y^\top Y)^{-0.5}\frac{-\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1} Y^\top Y +\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1} Y^\top R_X Y -Y^\top Y}{
+        \sqrt{\frac{(Y^\top Y)^2}{\hat\delta_1^\top\hat\delta_1}  -2Y^\top Y + Y^\top Y}}\\
+ &=& (Y^\top Y)^{-0.5}\frac{-\frac{(Y^\top Y)^2}{\hat\delta_1^\top\hat\delta_1} +\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1} Y^\top R_X R_X Y -Y^\top Y}{
+         \sqrt{\frac{(Y^\top Y)^2}{\hat\delta_1^\top\hat\delta_1}  -Y^\top Y} }\\
+ &=& (Y^\top Y)^{-1}\frac{-\frac{(Y^\top Y)^2}{\hat\delta_1^\top\hat\delta_1} +\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1}\hat\delta_1^\top\hat\delta_1 -Y^\top Y}{
+        \sqrt{\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1}  -1} }\\
+ &=& (Y^\top Y)^{-1}\frac{-\frac{(Y^\top Y)^2}{\hat\delta_1^\top\hat\delta_1} +Y^\top Y -Y^\top Y}{
+        \sqrt{\frac{Y^\top Y -\hat\delta_1^\top\hat\delta_1}{\hat\delta_1^\top\hat\delta_1}}}\\
+ &=& -\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1}\sqrt{\frac{\hat\delta_1^\top\hat\delta_1}{Y^\top Y -\hat\delta_1^\top\hat\delta_1}} \\
+ &=& -\sqrt{\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1}}\sqrt{\frac{Y^\top Y}{Y^\top Y -\hat\delta_1^\top\hat\delta_1}} \\
+ &=& -\sqrt{\frac{1}{(1-R^2)R^2}} <0
+
+-->
+
+
+<!--
+\begin{eqnarray}
+\mathsf{Corr}(\hat\delta_4,Y) &=& \frac{(\hat\delta_1/(R^2-1) -Y)^\top Y}{\sqrt{\hat\delta_1^\top\hat\delta_1/(R^2-1)^2}\sqrt{Y^\top Y}}\\
+&=& \frac{-\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1}\hat\delta_1^\top Y-Y^\top Y}{\sqrt{\hat\delta_1^\top\hat\delta_1\frac{(Y^\top Y)^2}{(\hat\delta_1^\top\hat\delta_1)^2}}\sqrt{Y^\top Y}}\\
+&=& \frac{\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1}Y^\top R_X Y-Y^\top Y}{\sqrt{\hat\delta_1^\top\hat\delta_1\frac{(Y^\top Y)^2}{(\hat\delta_1^\top\hat\delta_1)^2}}\sqrt{Y^\top Y}}\\
+&=& \frac{-\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1}\hat\delta_1^\top \hat\delta_1-Y^\top Y}{(Y^\top Y)^{1.5}(\hat\delta_1^\top\hat\delta_1)^{-0.5}}\\
+&=& \frac{\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1}\hat\delta_1^\top \hat\delta_1-Y^\top Y}{(Y^\top Y)^{1.5}(\hat\delta_1^\top\hat\delta_1)^{-0.5}}\\
+&=& \frac{(\hat\delta_1^\top\hat\delta_1)^{0.5}}{(Y^\top Y)^{1.5}}\left(-\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1}Y^\top (1-R_Y) Y-Y^\top Y\right)\\
+&=& \frac{(\hat\delta_1^\top\hat\delta_1)^{0.5}}{(Y^\top Y)^{1.5}}\left(-\frac{(Y^\top Y)^2}{\hat\delta_1^\top\hat\delta_1} +\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1}Y^\top R_Y Y-Y^\top Y\right)\\
+&=& \frac{(\hat\delta_1^\top\hat\delta_1)^{0.5}}{(Y^\top Y)^{1.5}}\left(-\frac{(Y^\top Y)^2}{\hat\delta_1^\top\hat\delta_1} -\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1}\hat\delta_1^\top\hat\delta_1-Y^\top Y\right)\\
+&=& -\sqrt{\frac{Y^\top Y}{\hat\delta_1^\top\hat\delta_1}}\\
+&=& -\frac{1}{\sqrt{1-R^2}}<0,\\
+\end{eqnarray}
+-->
+
+Drawing from the calculations for correlation above, the MSE is
+\begin{eqnarray}
+\mathrm{MSE}_4 &=& \frac{(Y-\hat{Y}_{B4})^\top(Y-\hat{Y}_{B4})}{Y^\top Y}\\
+   &=& \frac{1}{Y^\top Y}\left(Y^\top Y -\frac{2}{R^2}Y^\top H_X Y + \frac{1}{(R^2)^2} (H_X Y)^\top H_X Y \right)\\
+   &=& \frac{1}{Y^\top Y}\left(Y^\top Y +\left( \frac{1}{(R^2)^2} -\frac{2}{R^2}\right) (H_X Y)^\top H_X Y \right)\\
+   &=& \frac{1}{Y^\top Y}\left(Y^\top Y +  \frac{Y^\top Y}{\hat{Y}_{B1}^\top\hat{Y}_{B1}} \left( \frac{1}{R^2} -2\right) \hat{Y}_{B1}^\top \hat{Y}_{B1} \right)\\
+   &=& 1 +   \frac{1}{R^2} -2\\
+   &=&  \frac{1}{R^2} -1\\
+   &=&  \frac{1-R^2}{R^2}\\
+   &=&  \frac{1}{R^2}\mathrm{MSE}_1
+\end{eqnarray}
+
+
+This brain age is a multiple of $\hat{Y}_{B1}$ and so should have the same correlation with age, but, to confirm this:
+\begin{eqnarray}
+\mathrm{Corr}(\hat{Y}_{B4},Y)&=& \frac{\hat{Y}_{B4}^\top Y}{\sqrt{\hat{Y}_{B4}^\top \hat{Y}_{B4}}\sqrt{Y^\top Y}}\\
+&=& \frac{\hat{Y}_{B1}^\top Y/R^2}{\sqrt{\hat{Y}_{B1}^\top \hat{Y}_{B1}/R^4}\sqrt{Y^\top Y}}\\
+&=& \frac{\hat{Y}_{B1}^\top \hat{Y}_{B1}}{\sqrt{\hat{Y}_{B1}^\top \hat{Y}_{B1}}\sqrt{Y^\top Y}}\\
+&=& \frac{\sqrt{\hat{Y}_{B1}^\top \hat{Y}_{B1}}}{\sqrt{Y^\top Y}}\\
+&=& \sqrt{R^2}
+\end{eqnarray}
+
+### Review of methods 1, 2 and 4
+
+| Method | Est | GAP |
+| -- | -- | -- |
+|1| $\hat{Y}_{B1}(\hat\beta_1)=X\hat\beta_1$ | $\hat{Y}_{B1}(\hat\beta_1)-Y$ |
+|2| $\hat{Y}_{B2}=\hat{Y}_{B1}(\hat\beta_1)+(1-R^2)Y$  | $\hat\delta_2=\hat{Y}_{B1}(\hat\beta_1) +(1-R^2)Y -Y$ |
+|4| $\hat{Y}_{B4}=\hat{Y}_{B1}(\hat\beta_1)/R^2$ |$\hat\delta_4=\hat{Y}_{B1}(\hat\beta_1)/R^2-Y$   | 
+
+| Method | Cor(Est,Y)| Cor(GAP,Y) |
+| -- | -- | -- |
+|1| $\sqrt{R^2}$ | $\hat\rho_1=-\sqrt{1-R^2}$ |
+|2| $1/\sqrt{1+R^2(1-R^2)}$ | 0 |
+|4|  $\sqrt{R^2}$ | 0 |
+
+| Method | MSE |
+| -- | -- |
+|1|  $\mathrm{MSE}_1=1-R^2$ | 
+|2| $(1-R^2)\times R^2\ll\mathrm{MSE}_1$ |  
+|4|  $(1-R^2)\,/\,R^2\gg\mathrm{MSE}_1$ |
+
+
+
+
+### Least Squares Optimisation Subject to Orthogonality Constraint
+
+Another reasonable approch is to return to Least Squares optimisation but with an explicit constraint.  That is, intead of finding
+$$\hat\beta = \mathrm{argmax}_\beta\; (Y-X\beta)^\top(Y-X\beta) $$
+we solve the constrained optimisation
+$$\tilde\beta = \mathrm{argmax}_\beta\; (Y-X\beta)^\top(Y-X\beta) \;\; s.t. \;\; Y^\top(Y - X\beta)=0 $$
+You can use a Lagrange multiplier method to solve this.
+
+As a starting point, though, observe that the contstraint implies $Y^\top Y = Y^\top X\beta$, and observe that the estimate
+$$\tilde{\beta}=\hat\beta_1\frac{Y^\top Y}{(X\hat\beta_1)^\top X\hat\beta_1} = \hat\beta_1/R^2,$$
+satisfies the constraint:
+\begin{eqnarray}
+Y^\top X\tilde{\beta}&=&Y^\top X\hat{\beta}_1\frac{Y^\top Y}{(X\hat\beta_1)^\top X\hat\beta_1}\\
+&=&Y^\top H_X Y\frac{Y^\top Y}{(X\hat\beta_1)^\top X\hat\beta_1}\\
+&=&Y^\top H_X H_X Y\frac{Y^\top Y}{(X\hat\beta_1)^\top X\hat\beta_1}\\
+&=&(X\hat\beta_1)^\top X\hat\beta_1\frac{Y^\top Y}{(X\hat\beta_1)^\top X\hat\beta_1}\\
+&=&Y^\top Y.
+\end{eqnarray}
+(This doesn't show that this $\tilde\beta$ optimal, just that it satisfies the constraint and  $X\tilde\beta$ (almost) a linear combination of the $X$'s; there are other  $\tilde\beta^*$'s that satisfy the constraint but it must be shown that they have greater sum-of-squared errors.... I think this is the case, but I haven't shown it.)
+
+Thus, this estimator will be *both* a proper brain age estimate, in the span of $X$ (modulo the slight nonlinearity of dividing by $R^2$), and be orthogonal to $Y$.  
+
+However, this likely have a very large relative MSE, especially for small $R^2$. _TO DO: Compute MSE_
+<!-- When I compute the MSE I get a negative value: -->
+<!--
+$$ 1 + \frac{1}{R^2} \left(1-\frac{2}{R^2}\right),$$
+-->
+
+
