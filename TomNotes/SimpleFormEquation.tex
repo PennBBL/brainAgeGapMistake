@@ -50,9 +50,30 @@
 \maketitle
 %Below is an example of the problem environment
 
+\hrulefill \\
+
+\underline{Eqn (6) simplification}\\
+
+\begin{eqnarray}
+  Corr(A,\hat{A}^M)
+  &=&\frac{\hat\gamma^*+r_{A\hat{A}}}{\sqrt{(\hat\gamma^*+r_{A\hat{A}})^2+1-r^2_{A\hat{A}}}}\\
+  &=&\mathrm{sign}(\hat\gamma^*+r_{A\hat{A}})
+   \left(1 + \frac{1}{(\hat\gamma^*+r_{A\hat{A}})^2}(1-r^2_{A\hat{A}})\right)^{-1/2}\\
+\end{eqnarray}
+where $\hat\gamma^* = \hat\gamma \sqrt{V(A)/V(\hat{A})}$ is the held-out slope scaled by ratio of true to estimated brain age standard deviations (in testing data).
+
+The merit of this form is that it avoids covariances which are very hard to reason with or parse.  The first RHS is more visually appealing, but the last result is better because it then takes on the same form as all of the other results that hold under increasing assumptions.
+
+
+\hrulefill \\
+
 \underline{Notation}
 
-$A = \text{Age}$\\
+$A = \text{Age}$ (data is from test set unless otherwised noted)\\
+
+$\mathbf{A} = [1 A]$ - Design matrix for age\\ 
+
+$A_t = \text{Age}_t$ age data from training sample\\
 
 $X$ is the matrix of brain features from the training sample. \\
 
@@ -60,19 +81,61 @@ $\hat{A} =$ ML-predicted age \\
 
 $B = A - \hat{A} = \text{BAG}$ \\
 
-$H_A = A (A^TA)^{-1}A^T$ \\
+$H_A = A (A^{\top}A)^{-1}A^{\top}$ 'hat' matrix, projection into space of age\\
 
-$H_X = X (X^TX)^{-1}X^T$ \\
+$H_{A_t} = A_t (A_t^{\top}A_t)^{-1}A_t^{\top}$ $H_A$ based on training data\\
 
-$M =$ MBAG $= B -  \hat{\alpha} - \hat{\gamma} A = B - H_A B = A - \hat{A} - H_AA + H_A \hat{A} = -\hat{A} + H_A \hat{A}$ \\
+$H_X = X (X^{\top}X)^{-1}X^{\top}$ \\
 
-$= -R_A \hat{A}$ \textcolor{red}{, where $R_A=I-H_A$.} \\
+\begin{eqnarray}
+  M &=& \mathrm{MBAG}\\
+  &=& B -  \hat{\alpha}_t - \hat{\gamma}_t A\\
+  &=& B - \mathbf{A}(\mathbf{A}_t^\top \mathbf{A}_t)^{-1}\mathbf{A}_t^\top B_t\\
+  &=& A-\hat{A} - \mathbf{A}(\mathbf{A}_t^\top\mathbf{A}_t)^{-1}\mathbf{A}_t^\top A_t + \mathbf{A}(\mathbf{A}_t^\top \mathbf{A}_t)^{-1}\mathbf{A}_t^\top \hat{A}_t
+\end{eqnarray}
+Now, note that in simple linear regression, replacing the response with the predictor (i.e. running the silly regresion ``$X=\alpha+X\beta+\epsilon$'' produces estimates of $\hat\alpha=0$ and $\hat\gamma=1$.  This means that 
+$$
+(\mathbf{A}_t^\top\mathbf{A}_t)^{-1}\mathbf{A}_t^\top A_t=[0\,1]^\top,
+$$
+ and so 
+$$
+\mathbf{A}(\mathbf{A}_t^\top\mathbf{A}_t)^{-1}\mathbf{A}_t^\top A_t=A.
+$$
+And we can continue to simplify:
+\begin{eqnarray}
+  M 
+  &=& A-\hat{A} - A + \mathbf{A}(\mathbf{A}_t^\top \mathbf{A}_t)^{-1}\mathbf{A}_t^\top\hat{A}_t\\
+  &=& -\hat{A} + \mathbf{A}(\mathbf{A}_t^\top \mathbf{A}_t)^{-1}\mathbf{A}_t^\top\hat{A}_t\\
+  %% &=& A-\hat{A} - A + \mathbf{A}(\mathbf{A}_t^\top \mathbf{A}_t)^{-1}\mathbf{A}_t^\top(\hat{A}_t-A_t) + \mathbf{A}(\mathbf{A}_t^\top \mathbf{A}_t)^{-1}\mathbf{A}_t^\top A_t\\
+  %% &=& -\hat{A}  + \mathbf{A}(\mathbf{A}_t^\top \mathbf{A}_t)^{-1}\mathbf{A}_t^\top(\hat{A}_t-A_t) + A\\
+  %% &=& A-\hat{A}  + \mathbf{A}(\mathbf{A}_t^\top \mathbf{A}_t)^{-1}\mathbf{A}_t^\top(\hat{A}_t-A_t)\\
+  %% &=& A - \hat{A} - H_{A_t}A + H_{A_t} \hat{A}\\
+\end{eqnarray}
+Finally, if there is no hold out, and the relationship of BAG on age is estimated on (in essence) the test data, then 
+\begin{eqnarray}
+  M 
+  &=& -\hat{A} + \mathbf{A}(\mathbf{A}^\top \mathbf{A})^{-1}\mathbf{A}^\top\hat{A}\\
+  &=& -\hat{A} + H_{A} \hat{A}\\
+  &=& -R_A  \hat{A},
+\end{eqnarray}
+where $R_A=I-H_A$. \\
 
-$\hat{A}^M = A - M$ = Modified predicted age \\
+Modified predicted age in general:
+\begin{eqnarray}
+  \hat{A}^M &=& A - M\\
+  &=&A +\hat{A} - \mathbf{A}(\mathbf{A}_t^\top \mathbf{A}_t)^{-1}\mathbf{A}_t^\top\hat{A}_t\\
+  &=&A +\hat{A} + \mathbf{A}(\mathbf{A}_t^\top \mathbf{A}_t)^{-1}\mathbf{A}_t^\top(A_t-\hat{A})-\mathbf{A}(\mathbf{A}_t^\top \mathbf{A}_t)^{-1}\mathbf{A}_t^\top A_t\\
+  &=&A +\hat{A} + \mathbf{A}(\mathbf{A}_t^\top \mathbf{A}_t)^{-1}\mathbf{A}_t^\top(A_t-\hat{A}_t)-A\\
+  &=&\hat{A} + \mathbf{A}(\mathbf{A}_t^\top \mathbf{A}_t)^{-1}\mathbf{A}_t^\top B_t\\
+\end{eqnarray}
+Modified predicted age, if no hold out:
+\begin{eqnarray}
+  \hat{A}^M&=& A+R_A \hat{A}.
+\end{eqnarray}
 
 $r_{\hat{A}A}^2 = \frac{V(H_A \hat{A})}{V(\hat{A})} = \frac{V(H_{\hat{A}} A)}{V(A)} = 1 - \frac{V(R_A \hat{A})}{V(\hat{A})} = 1 - \frac{V(R_{\hat{A}} A)}{V(A)}$ \\ %\textcolor{red}{The variance X explains in Y is equal to the variance that Y explains in X.} \textcolor{red}{$\frac{reg SS}{Tot SS} = 1 - \frac{resid SS}{Tot SS}$} \\
 
-Importantly, we emphasize that the following derivation involves the algebraic manipulation of the sample estimates and not expectations. For example, ${\textrm{Corr}}(A, \hat{A}^M) = \frac{\textrm{Cov}(A, \hat{A}^M)}{\sqrt{V(A)V(\hat{A}^M)}} = \frac{A^T\hat{A}^M/N} {\sqrt{\{A^TA/N-(1^TA/N)^2\}\cdot [(\hat{A}^M)^T\hat{A}^M/N-\{1^T\hat{A}^M/N\}^2]}}$.
+Importantly, we emphasize that the following derivation involves the algebraic manipulation of the sample estimates and not expectations. For example, ${\textrm{Corr}}(A, \hat{A}^M) = \frac{\textrm{Cov}(A, \hat{A}^M)}{\sqrt{V(A)V(\hat{A}^M)}} = \frac{A^{\top}\hat{A}^M/N} {\sqrt{\{A^{\top}A/N-(1^{\top}A/N)^2\}\cdot [(\hat{A}^M)^{\top}\hat{A}^M/N-\{1^{\top}\hat{A}^M/N\}^2]}}$.
 \\
 
 \underline{Goal}
@@ -99,7 +162,7 @@ V(\hat{A}^M) &= V(A - M) \\
 So then, 
 \begin{align*}
 \textrm{Corr}(A, \hat{A}^M) &= \frac{V(A)}{\sqrt{V(A)V(\hat{A}^M)}}  \\
-&= \frac{V(A)}{\sqrt{V(A)V(\hat{A}) \frac{V(A)}{V(\hat{A})} + (1 - r_{\hat{A}A}^2)\Big]}} \\
+&= \frac{V(A)}{\sqrt{V(A)V(\hat{A})\Big[ \frac{V(A)}{V(\hat{A})} + (1 - r_{\hat{A}A}^2)\Big]}} \\
 &=  \left[\frac{V(\hat{A})}{V(A)} \left\{\frac{V(A)}{V(\hat{A})} + (1 - r_{\hat{A}A}^2) \right\} \right]^{-\frac{1}{2}} \\
 &= \left\{1 + \frac{V(\hat{A})}{V(A)}(1 - r_{\hat{A}A}^2) \right\}^{-\frac{1}{2}} \\
 \end{align*}
@@ -117,8 +180,8 @@ Next, note that if $\hat{A}$ is a linear estimator with an intercept, then $\fra
 
 \begin{align*}
     \frac{V(\hat{A})}{V(A)} &= \frac{V(H_XA)}{V(A)} \\
-    &= \frac{(H_XA)^T/N - (1^TH_XA/N)^2}{V(A)} \\
-    &= \frac{A^TH_XA/N - (1^TA/N)(1^TH_XA/N)}{V(A)} \\
+    &= \frac{(H_XA)^{\top}/N - (1^{\top}H_XA/N)^2}{V(A)} \\
+    &= \frac{A^{\top}H_XA/N - (1^{\top}A/N)(1^{\top}H_XA/N)}{V(A)} \\
     &= \frac{\text{Cov}(A, H_XA)}{V(A)} \\
     &= \frac{\text{Cov}(A,\hat{A})}{V(A)} \\
     &= \sqrt{\frac{V(\hat{A})}{V(A)}} r_{\hat{A}A}
@@ -138,8 +201,6 @@ And thus
 
 %\textcolor{red}{Overall, having difficulty getting to the result through these derivations although it seems to be well-known and checking numerically it seems to work out. Actually, I found this result in this linear models textbook: }
 %\textcolor{red}{\url{http://www.utstat.toronto.edu/\textasciitilde brunner/books/LinearModelsInStatistics.pdf} on page 162 where $r_{\hat{A}{A}}$ is the simple correlation between predicted and actual age.}\\
-
-
 
 \hrulefill \\
 
