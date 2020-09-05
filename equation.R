@@ -3,10 +3,12 @@
 ### Ellyn Butler
 ### October 11, 2019 - August 29, 2020
 
+start_time <- Sys.time()
+
 set.seed(20)
 
 # Load packages
-library('docstring')
+library('docstring') # Version 1.0.0
 
 # Define Eqn. (7)
 inflatedcorr <- function(A, B, G, predmod) {
@@ -28,21 +30,15 @@ names(corr_df) <- c('Corr_Agehat_Age', 'Corr_ModAgehat_Age', 'Corr_ModAgehat_Age
 corr_df$Corr_Agehat_Age <- seq(0, 1, .01)
 
 k <- 1
-for (r in corr_df$Corr_Agehat_Age) {
+for (rho in corr_df$Corr_Agehat_Age) {
   # Define the covariance matrix between Age and Brain
-  Sigma <- matrix(c(1, r, r, 1), ncol=2, nrow=2)
+  Sigma <- matrix(c(1, rho, rho, 1), ncol=2, nrow=2)
 
-  # Find the eigen decomposition of the covariance matrix
-  temp <- eigen(Sigma)
-
-  # Take the square root of the covariance matrix
-  SqrtSigma <- temp$vectors%*%diag(sqrt(temp$values))%*%t(temp$vectors)
+  # Find the square root of the covariance matrix
+  corsqrt <- (1/sqrt(2))*matrix(c(sqrt(1 + rho), sqrt(1 - rho), sqrt(1 + rho),
+    -sqrt(1 - rho)), 2, 2)
 
   # Create training data
-  rho <- r
-  phi <- sqrt(1 - rho^2)
-  corsqrt <- matrix(c(phi, -1/2, phi, 1/2), 2, 2)
-  #corsqrt <- SqrtSigma
   df_train <- data.frame(matrix(rnorm(10000 * 2), 10000, 2) %*% corsqrt)
   names(df_train) <- c('Age', 'Brain')
 
@@ -68,14 +64,11 @@ for (r in corr_df$Corr_Agehat_Age) {
     corr_df[k, 'Corr_ModAgehat_Age'] <- cor(df_test$Age, df_test$BAGRegressAgeMinusAge)
   }
   corr_df[k, 'Corr_ModAgehat_Age_Function'] <- inflatedcorr(df_test$Age, df_test[,c('Brain'), drop=FALSE], mod_regressAgeOutOfDeltas$coefficients[[2]], mod_predictAge)
-  #corr_df[k, 'Corr_ModAgehat_Age_Function'] <- cor(df_test$Age, df_test$Age - df_test$BAGindofAge)
+
   k = k + 1
 }
 
-write.csv(corr_df, 'corr_oneBrain.csv', row.names=FALSE)
-
-
-pdf(file='functionAndSimulation_two.pdf', width=3.75, height=3.8)
+pdf(file='functionAndSimulation.pdf', width=3.75, height=3.8)
 par(mar = c(5, 4, 2, 2) + 0.1)
 plot(corr_df$Corr_Agehat_Age, corr_df$Corr_ModAgehat_Age_Function,
          t = 'l', xlim = c(0, 1), ylim = c(0, 1), lwd = 2,
@@ -88,3 +81,7 @@ points(corr_df$Corr_Agehat_Age, corr_df$Corr_ModAgehat_Age,
            col = c('black', 'pink'), bty = 'n')
     grid()
 dev.off()
+
+end_time <- Sys.time()
+
+end_time - start_time
