@@ -21,16 +21,16 @@ inflatedcorr <- function(A, B, G, predmod) {
   #; @param predmod Model to regress age out of the Brain Age Gap
   A_hat <- predict(predmod, B)
   G_star <- G*sqrt(var(A)/var(A_hat))
-  (1 + (1/(cor(A, A_hat) + G_star)^2)*(1 - cor(A_hat, A)^2))^(-.5)
+  (1 + (1/(cor(A, A_hat) - G_star)^2)*(1 - cor(A_hat, A)^2))^(-.5)
 }
 
 
-corr_df <- data.frame(matrix(NA, nrow=101, ncol=3))
-names(corr_df) <- c('Corr_Agehat_Age', 'Corr_ModAgehat_Age', 'Corr_ModAgehat_Age_Function')
-corr_df$Corr_Agehat_Age <- seq(0, 1, .01)
+corr_df <- data.frame(matrix(NA, nrow=101, ncol=4))
+names(corr_df) <- c('Rho', 'Corr_Agehat_Age', 'Corr_ModAgehat_Age', 'Corr_ModAgehat_Age_Function')
+corr_df$Rho <- seq(0, 1, .01)
 
 k <- 1
-for (rho in corr_df$Corr_Agehat_Age) {
+for (rho in corr_df$Rho) {
   # Define the covariance matrix between Age and Brain
   Sigma <- matrix(c(1, rho, rho, 1), ncol=2, nrow=2)
 
@@ -49,21 +49,24 @@ for (rho in corr_df$Corr_Agehat_Age) {
   # Get parameters from models built on training data
   mod_predictAge <- lm(Age ~ Brain, df_train)
   df_train$predAge <- predict(mod_predictAge, df_train)
-  df_train$delta <- df_train$Age - df_train$predAge
-  mod_regressAgeOutOfDeltas <- lm(delta ~ Age, df_train)
+  df_train$BAG <-  df_train$predAge - df_train$Age
+  mod_regressAgeOutOfBAG <- lm(BAG ~ Age, df_train)
 
   # Apply transformations to test data
   df_test$predAge <- predict(mod_predictAge, df_test)
-  df_test$delta <- df_test$Age - df_test$predAge
-  df_test$inter <- predict(mod_regressAgeOutOfDeltas, df_test)
-  df_test$BAGindofAge <- df_test$delta - df_test$inter    #resid(mod_regressAgeOutOfDeltas, df_test)
+  df_test$BAG <- df_test$predAge - df_test$Age
+  df_test$inter <- predict(mod_regressAgeOutOfBAG, df_test)
+  df_test$BAGindofAge <- df_test$BAG - df_test$inter    #resid(mod_regressAgeOutOfBAG, df_test)
   df_test$BAGRegressAgeMinusAge <- df_test$Age - df_test$BAGindofAge
+
+  # Get the estimate of rho
+  corr_df[k, 'Corr_Agehat_Age'] <- cor(df_test$predAge, df_test$Age)
 
   numr <- k - 1
   if (numr%%5 == 0) {
     corr_df[k, 'Corr_ModAgehat_Age'] <- cor(df_test$Age, df_test$BAGRegressAgeMinusAge)
   }
-  corr_df[k, 'Corr_ModAgehat_Age_Function'] <- inflatedcorr(df_test$Age, df_test[,c('Brain'), drop=FALSE], mod_regressAgeOutOfDeltas$coefficients[[2]], mod_predictAge)
+  corr_df[k, 'Corr_ModAgehat_Age_Function'] <- inflatedcorr(df_test$Age, df_test[,c('Brain'), drop=FALSE], mod_regressAgeOutOfBAG$coefficients[[2]], mod_predictAge)
 
   k = k + 1
 }
