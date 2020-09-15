@@ -26,7 +26,7 @@ inflatedcorr <- function(A, B, G, predmod) {
 
 
 corr_df <- data.frame(matrix(NA, nrow=101, ncol=4))
-names(corr_df) <- c('Rho', 'Corr_Agehat_Age', 'Corr_ModAgehat_Age', 'Corr_ModAgehat_Age_Function')
+names(corr_df) <- c('Rho', 'Corr_Agehat_Age', 'Corr_ModPredAgehat_Age', 'Corr_ModPredAgehat_Age_Function')
 corr_df$Rho <- seq(0, 1, .01)
 
 k <- 1
@@ -56,27 +56,27 @@ for (rho in corr_df$Rho) {
   df_test$predAge <- predict(mod_predictAge, df_test)
   df_test$BAG <- df_test$predAge - df_test$Age
   df_test$inter <- predict(mod_regressAgeOutOfBAG, df_test)
-  df_test$BAGindofAge <- df_test$BAG - df_test$inter    #resid(mod_regressAgeOutOfBAG, df_test)
-  df_test$BAGRegressAgeMinusAge <- df_test$Age - df_test$BAGindofAge
+  df_test$MBAG <- df_test$BAG - df_test$inter    #resid(mod_regressAgeOutOfBAG, df_test)
+  df_test$ModPredAge <- df_test$Age + df_test$MBAG
 
   # Get the estimate of rho
   corr_df[k, 'Corr_Agehat_Age'] <- cor(df_test$predAge, df_test$Age)
 
   numr <- k - 1
   if (numr%%5 == 0) {
-    corr_df[k, 'Corr_ModAgehat_Age'] <- cor(df_test$Age, df_test$BAGRegressAgeMinusAge)
+    corr_df[k, 'Corr_ModPredAgehat_Age'] <- cor(df_test$Age, df_test$ModPredAge)
   }
-  corr_df[k, 'Corr_ModAgehat_Age_Function'] <- inflatedcorr(df_test$Age, df_test[,c('Brain'), drop=FALSE], mod_regressAgeOutOfBAG$coefficients[[2]], mod_predictAge)
+  corr_df[k, 'Corr_ModPredAgehat_Age_Function'] <- inflatedcorr(df_test$Age, df_test[,c('Brain'), drop=FALSE], mod_regressAgeOutOfBAG$coefficients[[2]], mod_predictAge)
 
   k = k + 1
 }
 
 pdf(file='functionAndSimulation.pdf', width=3.75, height=3.8)
 par(mar = c(5, 4, 2, 2) + 0.1)
-plot(corr_df$Corr_Agehat_Age, corr_df$Corr_ModAgehat_Age_Function,
+plot(corr_df$Corr_Agehat_Age, corr_df$Corr_ModPredAgehat_Age_Function,
          t = 'l', xlim = c(0, 1), ylim = c(0, 1), lwd = 2,
 xlab = 'True Correlation', ylab = 'Inflated Correlation')
-points(corr_df$Corr_Agehat_Age, corr_df$Corr_ModAgehat_Age,
+points(corr_df$Corr_Agehat_Age, corr_df$Corr_ModPredAgehat_Age,
            col = 'pink', pch = 18)
     abline(a = 0, b = 1, col = 'grey', lwd = 2)
     legend('bottomright', legend = c('r func', 'r trans'),
