@@ -4,6 +4,8 @@ This repository contains all of the scripts for the manuscript, Statistical Pitf
 
 `equation8.R` creates Figure 1.
 
+`realDataExample.R` creates Figure 2.
+
 `followalong.R` creates a worksheet to demonstrate the nature of residuals and the proposed modification under a model where the brain feature does not covary with age at all.
 
 `mbagSimulation.R` demonstrates that the reason MBAG is not a vector of residuals is because of regression on residuals.
